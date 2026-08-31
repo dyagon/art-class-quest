@@ -1,7 +1,15 @@
 import { motion } from 'framer-motion'
 import { useGame } from '../game/GameContext'
 import { LESSONS, gradeLabel } from '../game/lessons'
-import { aMinusCount, activeBonusCount, countedA, getPassLight, passLightCopy } from '../game/selectors'
+import {
+  activeBonusCount,
+  disciplineBadge,
+  disciplineHudCopy,
+  getPassLight,
+  passLightCopy,
+  passLightDetail,
+  uncoveredPenalty,
+} from '../game/selectors'
 import type { LessonId } from '../game/types'
 
 const lightClass = {
@@ -10,12 +18,19 @@ const lightClass = {
   red: 'bg-[#b23a2f]',
 }
 
+const disciplineClass = {
+  good: 'border-[#6f9a78] bg-[#e5f0e4] text-[#2f5a3a]',
+  hit: 'border-[#8a2d2d] bg-[#f3d4d0] text-[#7a1f1f]',
+  covered: 'border-[#7a9a5a] bg-[#eaf3d8] text-[#3d5a28]',
+}
+
 export function Hud() {
   const { state } = useGame()
   const light = getPassLight(state)
-  const aCount = countedA(state)
   const bonus = activeBonusCount(state)
-  const minus = aMinusCount(state)
+  const gap = uncoveredPenalty(state)
+  const badge = disciplineBadge(state)
+  const disciplineCopy = disciplineHudCopy(badge)
 
   return (
     <section className="flex flex-wrap items-center gap-3 border-b border-[#c9b48d]/70 px-4 py-3 md:gap-4 md:px-5">
@@ -38,30 +53,22 @@ export function Hud() {
 
       <motion.div
         animate={state.flashDiscipline ? { rotate: [0, -10, 8, -6, 0], x: [0, -3, 3, -2, 0] } : { rotate: 0 }}
-        className={`min-w-28 rounded-xl border px-3 py-1.5 text-center text-xs ${
-          state.disciplineHit
-            ? 'border-[#8a2d2d] bg-[#f3d4d0] text-[#7a1f1f]'
-            : 'border-[#6f9a78] bg-[#e5f0e4] text-[#2f5a3a]'
-        }`}
+        className={`min-w-28 rounded-xl border px-3 py-1.5 text-center text-xs ${disciplineClass[badge]}`}
       >
-        <div className="font-display text-sm">{state.disciplineHit ? '纪律 -1' : '纪律良好'}</div>
-        <div className="text-[10px] opacity-80">
-          {state.disciplineHit ? '已扣除通关资格' : '课堂秩序稳定'}
-        </div>
+        <div className="font-display text-sm">{disciplineCopy.title}</div>
+        <div className="text-[10px] opacity-80">{disciplineCopy.hint}</div>
       </motion.div>
 
       <div className="rounded-xl border border-[#7d9bb8] bg-[#eef4ff] px-3 py-1.5 text-center text-xs text-[#2f4a6b]">
         <div className="font-display text-sm">积极加分项 {bonus}</div>
-        <div className="text-[10px] opacity-80">可弥补 {bonus} 个 A-（现有 {minus} 个）</div>
+        <div className="text-[10px] opacity-80">可弥补 A- 与纪律扣分（缺口 {gap}）</div>
       </div>
 
       <div className="flex items-center gap-2 rounded-xl border border-[#c9b48d] bg-[#fff8ea] px-3 py-1.5">
         <span className={`h-2.5 w-2.5 rounded-full ${lightClass[light]}`} />
         <div className="text-xs leading-tight">
           <div>{passLightCopy(light)}</div>
-          <div className="text-[10px] text-ink-soft">
-            A/A+ {aCount}/4 · 加分 {bonus} / A- {minus}
-          </div>
+          <div className="text-[10px] text-ink-soft">{passLightDetail(state)}</div>
         </div>
       </div>
     </section>

@@ -2,15 +2,11 @@ import { AnimatePresence, motion } from 'framer-motion'
 import { useState } from 'react'
 import { useGame } from '../game/GameContext'
 import { TIMING_OPTIONS, getChoice, getLesson, gradeLabel } from '../game/lessons'
-import { aMinusCount, activeBonusCount, countedA } from '../game/selectors'
+import { passLightDetail } from '../game/selectors'
 
 export function BranchDrawer() {
   const { state } = useGame()
   const [open, setOpen] = useState(false)
-  const aCount = countedA(state)
-  const bonus = activeBonusCount(state)
-  const minus = aMinusCount(state)
-
   return (
     <footer className="border-t border-[#c9b48d]/70 bg-[#efe3c8]/80">
       <button
@@ -19,7 +15,7 @@ export function BranchDrawer() {
         className="flex w-full items-center justify-between px-4 py-2 text-xs text-ink-soft md:px-5"
       >
         <span>已探索路线 {open ? '▾' : '▴'}</span>
-        <span>A/A+ {aCount}/4 · 加分 {bonus} / A- {minus}</span>
+        <span>{passLightDetail(state)}</span>
       </button>
       <AnimatePresence initial={false}>
         {open ? (

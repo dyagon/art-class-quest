@@ -2,7 +2,14 @@ import { motion } from 'framer-motion'
 import { useState } from 'react'
 import { useGame } from '../game/GameContext'
 import { LESSONS, SUGGESTED_ROUTE, gradeLabel } from '../game/lessons'
-import { aMinusCount, activeBonusCount, diagnoseFail, hasPassed, uncoveredAMinus } from '../game/selectors'
+import {
+  aMinusCount,
+  activeBonusCount,
+  diagnoseFail,
+  disciplinePenaltyCount,
+  hasPassed,
+  uncoveredPenalty,
+} from '../game/selectors'
 import { SceneBackdrop } from './SceneBackdrop'
 
 export function EndingScreen() {
@@ -14,7 +21,9 @@ export function EndingScreen() {
   const reasons = diagnoseFail(state)
   const bonus = activeBonusCount(state)
   const minus = aMinusCount(state)
-  const gap = uncoveredAMinus(state)
+  const disc = disciplinePenaltyCount(state)
+  const gap = uncoveredPenalty(state)
+  const tally = `积极加分项 ${bonus}，A- ${minus} 个${disc ? '，纪律 -1' : ''}`
 
   return (
     <section className="relative min-h-0 flex-1 overflow-auto px-4 py-4 md:px-6">
@@ -33,16 +42,14 @@ export function EndingScreen() {
               <p className="mt-2 text-sm leading-7 text-ink-soft">
                 你不仅展现了出色的绘画技能，更具备解决突发问题、良好情绪管理与守时的艺术家品质！
               </p>
-              <p className="mt-2 text-xs text-ink-soft">
-                积极加分项 {bonus}，A- {minus} 个，已全部弥补。
-              </p>
+              <p className="mt-2 text-xs text-ink-soft">{tally}，已全部弥补。</p>
             </>
           ) : (
             <>
               <div className="ink-splash pointer-events-none absolute top-8 right-8 h-24 w-24 rounded-full bg-[#6b7280]" />
               <h2 className="font-display text-2xl">待精进艺术日志</h2>
               <p className="mt-2 text-sm text-ink-soft">
-                这轮还没通关。积极加分项 {bonus}，A- {minus} 个
+                这轮还没通关。{tally}
                 {gap > 0 ? `，还差 ${gap} 个未弥补` : ''}。看看卡在哪里：
               </p>
               <ul className="mt-3 space-y-1 text-sm">

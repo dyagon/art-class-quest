@@ -77,7 +77,7 @@ export const RESCUE_OPTIONS: { id: RescueId; emoji: string; title: string; desc:
     id: 'participateLater',
     emoji: '🎨',
     title: '承认短板，后续课堂积极参与',
-    desc: '成绩仍为 A-。请在各课点「积极参与回答问题」，用加分项抵消 A-',
+    desc: '成绩仍为 A-。请在各课点「积极参与回答问题」，用加分项抵消 A- 和纪律扣分',
   },
   {
     id: 'gambleAPlus',
@@ -95,10 +95,10 @@ export const RESCUE_OPTIONS: { id: RescueId; emoji: string; title: string; desc:
 
 export const SUGGESTED_ROUTE = [
   '画面不满意时，不要随便交；去找资料或请教老师，并尽量及时上交。',
-  '与同学争执时课后解决，不要打断课堂——纪律 -1 会直接失去通关资格。',
+  '与同学争执时尽量课后解决。打断课堂会纪律 -1，但可用后续「积极参与」加分补回。',
   '作品损坏时优先弄拙成巧，或抽时间重画并及时交；生气放弃则很难拿到 A。',
   '材料丢失时自己找替代或找老师补，不要放弃创作。',
-  '若得到 A-，优先请教老师改成 A；或在各课点「积极参与回答问题」，用加分项抵消 A-。',
+  '若得到 A- 或纪律扣分，优先请教老师改成 A；或在各课点「积极参与回答问题」，用加分项 1:1 抵消。',
 ]
 
 export function getLesson(id: LessonId): Lesson {
