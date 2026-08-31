@@ -2,6 +2,7 @@ import { BranchDrawer } from './components/BranchDrawer'
 import { EndingScreen } from './components/EndingScreen'
 import { GradeDebugDrawer } from './components/GradeDebugDrawer'
 import { Hud } from './components/Hud'
+import { InstallPrompt } from './components/InstallPrompt'
 import { PageBackground } from './components/PageBackground'
 import { RescueModal } from './components/RescueModal'
 import { ScenarioCard } from './components/ScenarioCard'
@@ -16,6 +17,7 @@ function GameShell() {
   return (
     <div className="flex min-h-dvh items-center justify-center p-2 md:p-6">
       <PageBackground state={state} />
+      <InstallPrompt />
       {isIntro ? (
         <TitleScreen />
       ) : (
