@@ -10,7 +10,9 @@ const GRADE_OPTIONS: { value: Grade; label: string }[] = [
   { value: 'A+', label: 'A+' },
   { value: 'A', label: 'A' },
   { value: 'A-', label: 'A-' },
-  { value: 'none', label: '不合格' },
+  { value: 'B', label: 'B' },
+  { value: 'C', label: 'C' },
+  { value: 'none', label: '缺交' },
 ]
 
 const lightClass = {
@@ -33,18 +35,24 @@ function fromStateGrades(grades: Grade[]): LessonGrades {
   return next
 }
 
+function parseNonNegInt(raw: string) {
+  const value = Number(raw)
+  if (!Number.isFinite(value)) return 0
+  return Math.max(0, Math.floor(value))
+}
+
 export function GradeSimulator() {
   const { state, simulatorOpen, setSimulatorOpen } = useGame()
   const [grades, setGrades] = useState<LessonGrades>(emptyGrades)
   const [participate, setParticipate] = useState(0)
-  const [disciplineHit, setDisciplineHit] = useState(false)
+  const [disciplinePoints, setDisciplinePoints] = useState(0)
 
   useEffect(() => {
     if (!simulatorOpen) return
     const snap = scoreSnapshotFromState(state)
     setGrades(fromStateGrades(snap.grades))
     setParticipate(snap.participateCount)
-    setDisciplineHit(snap.disciplineHit)
+    setDisciplinePoints(snap.disciplinePoints)
     // 仅在打开时从当前局灌入，避免编辑过程中被局内状态冲掉
     // eslint-disable-next-line react-hooks/exhaustive-deps -- intentional open-only sync
   }, [simulatorOpen])
@@ -54,24 +62,23 @@ export function GradeSimulator() {
       computeScore({
         grades: [grades[1], grades[2], grades[3], grades[4]],
         participateCount: participate,
-        disciplineHit,
+        disciplinePoints,
         complete: true,
-        remainingBonusSlots: Math.max(0, 4 - participate),
       }),
-    [grades, participate, disciplineHit],
+    [grades, participate, disciplinePoints],
   )
 
   function syncFromGame() {
     const snap = scoreSnapshotFromState(state)
     setGrades(fromStateGrades(snap.grades))
     setParticipate(snap.participateCount)
-    setDisciplineHit(snap.disciplineHit)
+    setDisciplinePoints(snap.disciplinePoints)
   }
 
   function resetDefaults() {
     setGrades(emptyGrades())
     setParticipate(0)
-    setDisciplineHit(false)
+    setDisciplinePoints(0)
   }
 
   return (
@@ -96,7 +103,7 @@ export function GradeSimulator() {
             <div className="sticky top-0 z-10 flex items-center justify-between border-b border-[#d2ba90]/80 bg-[#fff9ee]/95 px-4 py-3 backdrop-blur">
               <div>
                 <h2 className="font-display text-xl">期末成绩模拟器</h2>
-                <p className="text-[11px] text-ink-soft">手填等地与加减分，预测能否期末优秀</p>
+                <p className="text-[11px] text-ink-soft">手填等地与加减分，预测能否期末得优</p>
               </div>
               <button
                 type="button"
@@ -135,36 +142,37 @@ export function GradeSimulator() {
                 ))}
               </div>
 
-              <div className="flex flex-wrap items-center gap-3 rounded-xl border border-[#7d9bb8]/50 bg-[#eef4ff] px-3 py-3 text-sm text-[#2f4a6b]">
+              <div className="flex flex-wrap items-center gap-4 rounded-xl border border-[#7d9bb8]/50 bg-[#eef4ff] px-3 py-3 text-sm text-[#2f4a6b]">
                 <label className="flex items-center gap-2">
-                  <span>积极参与</span>
+                  <span>积极加分</span>
                   <input
                     type="number"
                     min={0}
-                    max={4}
+                    step={1}
                     value={participate}
-                    onChange={(event) =>
-                      setParticipate(Math.min(4, Math.max(0, Number(event.target.value) || 0)))
-                    }
-                    className="w-14 rounded-lg border border-[#9bb3cc] bg-white px-2 py-1 text-center"
+                    onChange={(event) => setParticipate(parseNonNegInt(event.target.value))}
+                    className="w-16 rounded-lg border border-[#9bb3cc] bg-white px-2 py-1 text-center"
                   />
-                  <span className="text-xs opacity-80">/ 4</span>
                 </label>
                 <label className="flex items-center gap-2">
+                  <span>纪律减分</span>
                   <input
-                    type="checkbox"
-                    checked={disciplineHit}
-                    onChange={(event) => setDisciplineHit(event.target.checked)}
+                    type="number"
+                    min={0}
+                    step={1}
+                    value={disciplinePoints}
+                    onChange={(event) => setDisciplinePoints(parseNonNegInt(event.target.value))}
+                    className="w-16 rounded-lg border border-[#9bb3cc] bg-white px-2 py-1 text-center"
                   />
-                  <span>纪律 -1</span>
                 </label>
+                <span className="text-[11px] opacity-80">加减分不设上限；A- / B / C 各计 1 点扣分</span>
               </div>
 
               <div className="rounded-xl border border-[#d2ba90] bg-[#fff8ea] px-4 py-3">
                 <div className="flex flex-wrap items-center gap-3">
                   <span className={`h-3 w-3 rounded-full ${lightClass[breakdown.light]}`} />
                   <span className="font-display text-lg">
-                    {breakdown.canPass ? '预测：期末优秀' : `预测：${passLightCopy(breakdown.light)}`}
+                    {breakdown.canPass ? '预测：期末得优' : `预测：${passLightCopy(breakdown.light)}`}
                   </span>
                 </div>
                 <p className="mt-2 text-xs text-ink-soft">

@@ -20,7 +20,7 @@ export function scoreSnapshotFromState(state: GameState): ScoreSnapshot {
   return {
     grades: records.map((record) => record.effectiveGrade),
     participateCount: state.participatedLessons.length,
-    disciplineHit: state.disciplineHit,
+    disciplinePoints: state.disciplineHit ? 1 : 0,
     remainingBonusSlots: remainingBonusSlots(state),
     inRescue: state.phase.type === 'rescue',
     complete: state.phase.type === 'ending' && state.records.length >= 4,
@@ -57,7 +57,8 @@ export function penaltyCount(state: GameState) {
 }
 
 export function uncoveredAMinus(state: GameState) {
-  return Math.max(0, aMinusCount(state) - activeBonusCount(state))
+  const score = scoreFromState(state)
+  return Math.max(0, score.belowA - score.bonus)
 }
 
 export function uncoveredPenalty(state: GameState) {
@@ -65,7 +66,8 @@ export function uncoveredPenalty(state: GameState) {
 }
 
 export function isDisciplineCovered(state: GameState) {
-  return state.disciplineHit && activeBonusCount(state) > aMinusCount(state)
+  const score = scoreFromState(state)
+  return state.disciplineHit && score.bonus > score.belowA
 }
 
 export type DisciplineBadge = 'good' | 'hit' | 'covered'
@@ -109,16 +111,16 @@ export function diagnoseFail(state: GameState): string[] {
       const choice = getChoice(record.lessonId, record.choiceId)
       reasons.push(
         choice.skipSubmit
-          ? `${lesson.title}放弃创作，不合格（缺交）`
-          : `${lesson.title}忘记交作业，不合格（缺交）`,
+          ? `${lesson.title}放弃创作，缺交`
+          : `${lesson.title}忘记交作业，缺交`,
       )
     }
   }
   const score = scoreFromState(state)
-  const gap = Math.max(0, score.aMinus - score.bonus)
+  const gap = Math.max(0, score.belowA - score.bonus)
   if (gap > 0) {
     reasons.push(
-      `有 ${score.aMinus} 个 A-，加分 ${score.bonus}（参与${score.participate} + A+${score.aPlus}），还差 ${gap} 个才能弥补 A-`,
+      `有 ${score.belowA} 个 A-以下等地（A- ${score.aMinus} / B ${score.bCount} / C ${score.cCount}），加分 ${score.bonus}（参与${score.participate} + A+${score.aPlus}），还差 ${gap} 个才能弥补`,
     )
   } else if (score.uncovered > 0) {
     reasons.push(
@@ -129,9 +131,9 @@ export function diagnoseFail(state: GameState): string[] {
 }
 
 export function passLightCopy(light: PassLight) {
-  if (light === 'green') return '完美通关中'
+  if (light === 'green') return '有望期末得优'
   if (light === 'yellow') return '处于危险 / 需补救'
-  return '通关失败'
+  return '未能期末得优'
 }
 
 export function disciplineHudCopy(badge: DisciplineBadge) {
@@ -146,5 +148,9 @@ export function passLightDetail(state: GameState) {
   const badge = disciplineBadge(state)
   const disciplineBit =
     badge === 'hit' ? ' · 纪律 -1' : badge === 'covered' ? ' · 纪律已补' : ''
-  return `A/A+ ${aCount}/4 · ${formatBonusTally(score)} / A- ${score.aMinus}${disciplineBit}`
+  const belowBit =
+    score.belowA > 0
+      ? ` / A-以下 ${score.belowA}`
+      : ` / A- ${score.aMinus}`
+  return `A/A+ ${aCount}/4 · ${formatBonusTally(score)}${belowBit}${disciplineBit}`
 }

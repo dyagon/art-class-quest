@@ -2,6 +2,7 @@ import { motion } from 'framer-motion'
 import { useState } from 'react'
 import { useGame } from '../game/GameContext'
 import { LESSONS, SUGGESTED_ROUTE, gradeLabel } from '../game/lessons'
+import { formatPenaltyTally } from '../game/scoreMath'
 import {
   diagnoseFail,
   hasPassed,
@@ -17,9 +18,9 @@ export function EndingScreen() {
   const passed = hasPassed(state)
   const reasons = diagnoseFail(state)
   const score = scoreFromState(state)
-  const tally = `加分 ${score.bonus}（参与${score.participate} + A+${score.aPlus}），A- ${score.aMinus} 个${
-    score.discipline ? '，纪律 -1' : ''
-  }`
+  const allMissing =
+    state.records.length === 4 && state.records.every((record) => record.effectiveGrade === 'none')
+  const tally = `加分 ${score.bonus}（参与${score.participate} + A+${score.aPlus}），${formatPenaltyTally(score)}`
 
   return (
     <section className="relative min-h-0 flex-1 overflow-auto px-4 py-4 md:px-6">
@@ -33,12 +34,20 @@ export function EndingScreen() {
         <div className="px-5 py-4">
           {passed ? (
             <>
-              <div className="stamp-seal mb-3 inline-block px-3 py-1 text-stamp">ALL-A PASS</div>
+              <div className="stamp-seal mb-3 inline-block px-3 py-1 text-stamp">期末得优</div>
               <h2 className="font-display text-2xl">期末优秀艺术展架</h2>
               <p className="mt-2 text-sm leading-7 text-ink-soft">
                 你不仅展现了出色的绘画技能，更具备解决突发问题、良好情绪管理与守时的艺术家品质！
               </p>
               <p className="mt-2 text-xs text-ink-soft">{tally}，已全部弥补。</p>
+            </>
+          ) : allMissing ? (
+            <>
+              <div className="ink-splash pointer-events-none absolute top-8 right-8 h-24 w-24 rounded-full bg-[#6b7280]" />
+              <h2 className="font-display text-2xl text-[#7a1f1f]">期末等地为不合格</h2>
+              <p className="mt-3 text-sm leading-7 text-ink-soft">
+                相信你一定有完成的困难和半成的作品，赶紧带上作品向老师沟通求助吧！
+              </p>
             </>
           ) : (
             <>
@@ -46,11 +55,11 @@ export function EndingScreen() {
               <h2 className="font-display text-2xl">待精进艺术日志</h2>
               {score.hasFail ? (
                 <p className="mt-2 rounded-lg border border-[#b23a2f]/40 bg-[#f8e4e0] px-3 py-2 text-sm text-[#7a1f1f]">
-                  有课次不合格（缺交），无法通关。
+                  有课次缺交，无法期末得优。
                 </p>
               ) : null}
               <p className="mt-2 text-sm text-ink-soft">
-                这轮还没通关。{tally}
+                这轮还没期末得优。{tally}
                 {score.uncovered > 0 ? `，还差 ${score.uncovered} 个未弥补` : ''}。看看卡在哪里：
               </p>
               <ul className="mt-3 space-y-1 text-sm">
@@ -101,13 +110,13 @@ export function EndingScreen() {
             >
               成绩模拟器
             </button>
-            {!passed ? (
+            {!passed && !allMissing ? (
               <button
                 type="button"
                 onClick={() => setShowRoute((value) => !value)}
                 className="rounded-full border border-[#b89a6d] px-4 py-2 text-sm"
               >
-                {showRoute ? '收起建议路线' : '查看全 A 通关标准路线'}
+                {showRoute ? '收起建议路线' : '查看期末得优标准路线'}
               </button>
             ) : null}
           </div>

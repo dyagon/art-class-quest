@@ -63,7 +63,7 @@ export const TIMING_OPTIONS: { id: SubmitTiming; label: string; hint: string; to
   { id: 'onTime', label: '及时上交', hint: '标准评分', tone: 'good' },
   { id: 'late', label: '晚交', hint: '可能降级', tone: 'warn' },
   { id: 'finalMakeup', label: '期末补交', hint: '评分更严', tone: 'alert' },
-  { id: 'forgot', label: '忘记交', hint: '本课不合格', tone: 'danger' },
+  { id: 'forgot', label: '忘记交', hint: '本课缺交', tone: 'danger' },
 ]
 
 export const RESCUE_OPTIONS: { id: RescueId; emoji: string; title: string; desc: string }[] = [
@@ -71,7 +71,7 @@ export const RESCUE_OPTIONS: { id: RescueId; emoji: string; title: string; desc:
     id: 'askTeacher',
     emoji: '🙋',
     title: '请教老师并修改画面',
-    desc: '直接修正为 A，达成通关要求',
+    desc: '直接修正为 A，达成期末得优要求',
   },
   {
     id: 'participateLater',
@@ -97,7 +97,7 @@ export const SUGGESTED_ROUTE = [
   '画面不满意时，不要随便交；去找资料或请教老师，并尽量及时上交。',
   '与同学争执时尽量课后解决。打断课堂会纪律 -1，但可用「积极参与」或后续 A+ 加分补回。',
   '作品损坏时优先弄拙成巧，或抽时间重画并及时交；生气放弃则很难拿到 A。',
-  '材料丢失时自己找替代或找老师补，不要放弃创作（缺交即不合格，无法通关）。',
+  '材料丢失时自己找替代或找老师补，不要放弃创作（缺交无法期末得优）。',
   '若得到 A- 或纪律扣分，优先请教老师改成 A；或用「积极参与」与 A+ 加分 1:1 抵消。',
 ]
 
@@ -118,6 +118,6 @@ export function configKey(lessonId: LessonId, choiceId: string) {
 }
 
 export function gradeLabel(grade: string) {
-  if (grade === 'none') return '不合格'
+  if (grade === 'none') return '缺交'
   return grade
 }

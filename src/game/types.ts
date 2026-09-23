@@ -1,4 +1,4 @@
-export type Grade = 'A+' | 'A' | 'A-' | 'none'
+export type Grade = 'A+' | 'A' | 'A-' | 'B' | 'C' | 'none'
 
 export type SubmitTiming = 'onTime' | 'late' | 'finalMakeup' | 'forgot'
 

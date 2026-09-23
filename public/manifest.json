@@ -1,8 +1,8 @@
 {
   "id": "/",
-  "name": "美术课通关指南",
+  "name": "美术课期末得优指南",
   "short_name": "美术课",
-  "description": "四节课，一次通关练习",
+  "description": "四节课，一次期末得优练习",
   "start_url": "/",
   "scope": "/",
   "display": "standalone",

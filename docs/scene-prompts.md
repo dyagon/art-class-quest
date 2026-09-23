@@ -100,7 +100,7 @@ Youth watercolor illustration, ultra-wide 3:1 banner (2400x800). A dark violet s
 
 ## ending-pass
 
-- 用途：通关成功结算页
+- 用途：期末得优成功结算页
 - 占位色：`#D4A84B`
 - 建议文件名：`public/scenes/ending-pass.png`
 
@@ -116,7 +116,7 @@ Youth watercolor illustration, ultra-wide 3:1 banner (2400x800). A warm golden m
 
 ## ending-fail
 
-- 用途：未通关结算页
+- 用途：未期末得优结算页
 - 占位色：`#6B7280`
 - 建议文件名：`public/scenes/ending-fail.png`
 

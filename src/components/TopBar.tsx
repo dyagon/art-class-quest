@@ -25,7 +25,7 @@ export function TopBar() {
         }}
         title="连续点标题 5 次可开关成绩概率调试"
       >
-        美术课通关指南
+        美术课期末得优指南
       </button>
       <div className="flex shrink-0 items-center gap-2">
         <button

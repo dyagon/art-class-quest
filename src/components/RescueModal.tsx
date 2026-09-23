@@ -41,7 +41,7 @@ export function RescueModal() {
                 拯救画作
               </h2>
               <p className="mt-2 text-sm leading-6 text-ink-soft">
-                当前作品评级为 A-，尚未达到全 A 通关标准！请选择你的补救策略：
+                当前作品评级为 A-，尚未达到期末得优标准！请选择你的补救策略：
               </p>
               <div className="mt-4 grid gap-2">
                 {RESCUE_OPTIONS.map((option) => (
