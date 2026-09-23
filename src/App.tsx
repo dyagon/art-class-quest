@@ -1,6 +1,7 @@
 import { BranchDrawer } from './components/BranchDrawer'
 import { EndingScreen } from './components/EndingScreen'
 import { GradeDebugDrawer } from './components/GradeDebugDrawer'
+import { GradeSimulator } from './components/GradeSimulator'
 import { Hud } from './components/Hud'
 import { InstallPrompt } from './components/InstallPrompt'
 import { PageBackground } from './components/PageBackground'
@@ -34,6 +35,7 @@ function GameShell() {
           <BranchDrawer />
           <RescueModal />
           <GradeDebugDrawer />
+          <GradeSimulator />
         </div>
       )}
     </div>

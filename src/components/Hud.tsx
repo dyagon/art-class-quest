@@ -2,12 +2,14 @@ import { motion } from 'framer-motion'
 import { useGame } from '../game/GameContext'
 import { LESSONS, gradeLabel } from '../game/lessons'
 import {
-  activeBonusCount,
+  aPlusCount,
   disciplineBadge,
   disciplineHudCopy,
   getPassLight,
+  participateCount,
   passLightCopy,
   passLightDetail,
+  scoreFromState,
   uncoveredPenalty,
 } from '../game/selectors'
 import type { LessonId } from '../game/types'
@@ -27,10 +29,12 @@ const disciplineClass = {
 export function Hud() {
   const { state } = useGame()
   const light = getPassLight(state)
-  const bonus = activeBonusCount(state)
+  const score = scoreFromState(state)
   const gap = uncoveredPenalty(state)
   const badge = disciplineBadge(state)
   const disciplineCopy = disciplineHudCopy(badge)
+  const participate = participateCount(state)
+  const plus = aPlusCount(state)
 
   return (
     <section className="flex flex-wrap items-center gap-3 border-b border-[#c9b48d]/70 px-4 py-3 md:gap-4 md:px-5">
@@ -60,7 +64,12 @@ export function Hud() {
       </motion.div>
 
       <div className="rounded-xl border border-[#7d9bb8] bg-[#eef4ff] px-3 py-1.5 text-center text-xs text-[#2f4a6b]">
-        <div className="font-display text-sm">积极加分项 {bonus}</div>
+        <div className="font-display text-sm">
+          加分 {score.bonus}
+          <span className="ml-1 font-sans text-[10px] font-normal opacity-80">
+            （参与{participate} + A+{plus}）
+          </span>
+        </div>
         <div className="text-[10px] opacity-80">可弥补 A- 与纪律扣分（缺口 {gap}）</div>
       </div>
 
@@ -88,21 +97,28 @@ function ArtworkSlot({
 }) {
   const filled = Boolean(grade)
   const glow = rawGrade === 'A+'
+  const isFail = grade === 'none'
 
   return (
     <div
       className={`relative flex h-14 w-14 items-center justify-center rounded-md border-2 md:h-16 md:w-16 ${
         filled
-          ? 'border-[#8a6a3d] bg-[#efe0c0]'
+          ? isFail
+            ? 'border-[#6b1f1f] bg-[#f0c4be]'
+            : 'border-[#8a6a3d] bg-[#efe0c0]'
           : 'border-dashed border-[#b7a07a] bg-[#f7f0de]/70'
       } ${active ? 'ring-2 ring-[#d4a84b]/70' : ''} ${glow ? 'shadow-[0_0_16px_rgba(212,168,75,0.65)]' : ''}`}
     >
       {filled ? (
         <>
-          <div className="h-8 w-8 rounded-sm bg-[#d8c09a]" />
+          <div className={`h-8 w-8 rounded-sm ${isFail ? 'bg-[#c4786e]' : 'bg-[#d8c09a]'}`} />
           <span
             className={`stamp-seal absolute -right-1 -bottom-1 px-1 text-[10px] leading-4 ${
-              grade === 'none' ? 'text-[#6b5648]' : grade === 'A-' ? 'text-[#b23a2f]' : 'text-[#b23a2f]'
+              isFail
+                ? 'bg-[#7a1f1f] text-[#fff4f0]'
+                : grade === 'A-'
+                  ? 'text-[#b23a2f]'
+                  : 'text-[#b23a2f]'
             }`}
           >
             {gradeLabel(grade ?? 'none')}

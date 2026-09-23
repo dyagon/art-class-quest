@@ -47,7 +47,7 @@ export function GradeDebugDrawer() {
         </button>
       </div>
       <p className="mb-2 text-[11px] leading-5 text-ink-soft">
-        权重不必加总为 100，按比例掷骰。忘记交 / 放弃创作固定为未交；第 1 课「随便交了」固定 A-。
+        权重不必加总为 100，按比例掷骰。忘记交 / 放弃创作固定为不合格；第 1 课「随便交了」固定 A-。
       </p>
       <select
         className="mb-3 w-full rounded-lg border border-[#d2ba90] bg-white px-2 py-1.5 text-xs"

@@ -2,7 +2,7 @@ import { useRef } from 'react'
 import { useGame } from '../game/GameContext'
 
 export function TopBar() {
-  const { canUndo, undo, reset, debugOpen, setDebugOpen } = useGame()
+  const { canUndo, undo, reset, debugOpen, setDebugOpen, setSimulatorOpen } = useGame()
   const clicks = useRef(0)
   const clickTimer = useRef<number>(0)
 
@@ -28,6 +28,13 @@ export function TopBar() {
         美术课通关指南
       </button>
       <div className="flex shrink-0 items-center gap-2">
+        <button
+          type="button"
+          onClick={() => setSimulatorOpen(true)}
+          className="rounded-full border border-[#7d9bb8] bg-[#eef4ff] px-3 py-1 text-xs text-[#2f4a6b] transition hover:-translate-y-0.5"
+        >
+          成绩模拟器
+        </button>
         <button
           type="button"
           onClick={undo}

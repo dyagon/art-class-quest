@@ -1,28 +1,59 @@
 import { getChoice, getLesson } from './lessons'
+import {
+  computeScore,
+  formatBonusTally,
+  isPassingGrade,
+  type ScoreBreakdown,
+  type ScoreSnapshot,
+} from './scoreMath'
 import type { GameState, LessonId, LessonRecord, PassLight } from './types'
 
-export function isPassingGrade(grade: LessonRecord['effectiveGrade']) {
-  return grade === 'A' || grade === 'A+'
-}
+export { isPassingGrade, formatBonusTally }
+export type { ScoreBreakdown, ScoreSnapshot }
 
 function visibleRecords(state: GameState): LessonRecord[] {
   return state.pendingRecord ? [...state.records, state.pendingRecord] : state.records
 }
 
-export function activeBonusCount(state: GameState) {
+export function scoreSnapshotFromState(state: GameState): ScoreSnapshot {
+  const records = visibleRecords(state)
+  return {
+    grades: records.map((record) => record.effectiveGrade),
+    participateCount: state.participatedLessons.length,
+    disciplineHit: state.disciplineHit,
+    remainingBonusSlots: remainingBonusSlots(state),
+    inRescue: state.phase.type === 'rescue',
+    complete: state.phase.type === 'ending' && state.records.length >= 4,
+  }
+}
+
+export function scoreFromState(state: GameState): ScoreBreakdown {
+  return computeScore(scoreSnapshotFromState(state))
+}
+
+export function participateCount(state: GameState) {
   return state.participatedLessons.length
 }
 
+export function aPlusCount(state: GameState) {
+  return visibleRecords(state).filter((record) => record.effectiveGrade === 'A+').length
+}
+
+/** 可抵扣加分 = 积极参与次数 + A+ 课次数 */
+export function activeBonusCount(state: GameState) {
+  return scoreFromState(state).bonus
+}
+
 export function aMinusCount(state: GameState) {
-  return visibleRecords(state).filter((record) => record.effectiveGrade === 'A-').length
+  return scoreFromState(state).aMinus
 }
 
 export function disciplinePenaltyCount(state: GameState) {
-  return state.disciplineHit ? 1 : 0
+  return scoreFromState(state).discipline
 }
 
 export function penaltyCount(state: GameState) {
-  return aMinusCount(state) + disciplinePenaltyCount(state)
+  return scoreFromState(state).penalty
 }
 
 export function uncoveredAMinus(state: GameState) {
@@ -30,7 +61,7 @@ export function uncoveredAMinus(state: GameState) {
 }
 
 export function uncoveredPenalty(state: GameState) {
-  return Math.max(0, penaltyCount(state) - activeBonusCount(state))
+  return scoreFromState(state).uncovered
 }
 
 export function isDisciplineCovered(state: GameState) {
@@ -56,9 +87,7 @@ export function remainingBonusSlots(state: GameState) {
 
 export function hasPassed(state: GameState) {
   if (state.phase.type !== 'ending') return false
-  if (state.records.length < 4) return false
-  if (state.records.some((record) => record.effectiveGrade === 'none')) return false
-  return uncoveredPenalty(state) === 0
+  return scoreFromState(state).canPass
 }
 
 export function countedA(state: GameState) {
@@ -66,21 +95,13 @@ export function countedA(state: GameState) {
 }
 
 export function getPassLight(state: GameState): PassLight {
-  const records = visibleRecords(state)
-  if (records.some((record) => record.rawGrade === 'none' || record.effectiveGrade === 'none')) {
-    return 'red'
-  }
-  const uncovered = uncoveredPenalty(state)
-  if (uncovered === 0) return 'green'
-  if (state.phase.type === 'rescue') return 'yellow'
-  if (remainingBonusSlots(state) >= uncovered) return 'yellow'
-  return 'red'
+  return scoreFromState(state).light
 }
 
 export function diagnoseFail(state: GameState): string[] {
   const reasons: string[] = []
   if (state.disciplineHit && !isDisciplineCovered(state)) {
-    reasons.push('第 2 课打断课堂，纪律 -1，未用积极加分弥补')
+    reasons.push('第 2 课打断课堂，纪律 -1，未用积极参与或 A+ 弥补')
   }
   for (const record of state.records) {
     const lesson = getLesson(record.lessonId)
@@ -88,16 +109,21 @@ export function diagnoseFail(state: GameState): string[] {
       const choice = getChoice(record.lessonId, record.choiceId)
       reasons.push(
         choice.skipSubmit
-          ? `${lesson.title}放弃创作，缺交作业`
-          : `${lesson.title}忘记交作业，本课无成绩`,
+          ? `${lesson.title}放弃创作，不合格（缺交）`
+          : `${lesson.title}忘记交作业，不合格（缺交）`,
       )
     }
   }
-  const minus = aMinusCount(state)
-  const bonus = activeBonusCount(state)
-  const gap = uncoveredAMinus(state)
+  const score = scoreFromState(state)
+  const gap = Math.max(0, score.aMinus - score.bonus)
   if (gap > 0) {
-    reasons.push(`有 ${minus} 个 A-，积极加分项 ${bonus} 个，还差 ${gap} 个才能弥补`)
+    reasons.push(
+      `有 ${score.aMinus} 个 A-，加分 ${score.bonus}（参与${score.participate} + A+${score.aPlus}），还差 ${gap} 个才能弥补 A-`,
+    )
+  } else if (score.uncovered > 0) {
+    reasons.push(
+      `加减分未齐：加分 ${score.bonus}（参与${score.participate} + A+${score.aPlus}），扣分 ${score.penalty}，还差 ${score.uncovered}`,
+    )
   }
   return reasons
 }
@@ -109,17 +135,16 @@ export function passLightCopy(light: PassLight) {
 }
 
 export function disciplineHudCopy(badge: DisciplineBadge) {
-  if (badge === 'hit') return { title: '纪律 -1', hint: '可用积极加分弥补' }
-  if (badge === 'covered') return { title: '纪律已弥补', hint: '积极加分已补回' }
+  if (badge === 'hit') return { title: '纪律 -1', hint: '可用积极参与或 A+ 弥补' }
+  if (badge === 'covered') return { title: '纪律已弥补', hint: '加分已补回' }
   return { title: '纪律良好', hint: '课堂秩序稳定' }
 }
 
 export function passLightDetail(state: GameState) {
   const aCount = countedA(state)
-  const bonus = activeBonusCount(state)
-  const minus = aMinusCount(state)
+  const score = scoreFromState(state)
   const badge = disciplineBadge(state)
   const disciplineBit =
     badge === 'hit' ? ' · 纪律 -1' : badge === 'covered' ? ' · 纪律已补' : ''
-  return `A/A+ ${aCount}/4 · 加分 ${bonus} / A- ${minus}${disciplineBit}`
+  return `A/A+ ${aCount}/4 · ${formatBonusTally(score)} / A- ${score.aMinus}${disciplineBit}`
 }

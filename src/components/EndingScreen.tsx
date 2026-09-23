@@ -3,27 +3,23 @@ import { useState } from 'react'
 import { useGame } from '../game/GameContext'
 import { LESSONS, SUGGESTED_ROUTE, gradeLabel } from '../game/lessons'
 import {
-  aMinusCount,
-  activeBonusCount,
   diagnoseFail,
-  disciplinePenaltyCount,
   hasPassed,
-  uncoveredPenalty,
+  scoreFromState,
 } from '../game/selectors'
 import { SceneBackdrop } from './SceneBackdrop'
 
 export function EndingScreen() {
-  const { state, reset } = useGame()
+  const { state, reset, setSimulatorOpen } = useGame()
   const [showRoute, setShowRoute] = useState(false)
   if (state.phase.type !== 'ending') return null
 
   const passed = hasPassed(state)
   const reasons = diagnoseFail(state)
-  const bonus = activeBonusCount(state)
-  const minus = aMinusCount(state)
-  const disc = disciplinePenaltyCount(state)
-  const gap = uncoveredPenalty(state)
-  const tally = `积极加分项 ${bonus}，A- ${minus} 个${disc ? '，纪律 -1' : ''}`
+  const score = scoreFromState(state)
+  const tally = `加分 ${score.bonus}（参与${score.participate} + A+${score.aPlus}），A- ${score.aMinus} 个${
+    score.discipline ? '，纪律 -1' : ''
+  }`
 
   return (
     <section className="relative min-h-0 flex-1 overflow-auto px-4 py-4 md:px-6">
@@ -48,9 +44,14 @@ export function EndingScreen() {
             <>
               <div className="ink-splash pointer-events-none absolute top-8 right-8 h-24 w-24 rounded-full bg-[#6b7280]" />
               <h2 className="font-display text-2xl">待精进艺术日志</h2>
+              {score.hasFail ? (
+                <p className="mt-2 rounded-lg border border-[#b23a2f]/40 bg-[#f8e4e0] px-3 py-2 text-sm text-[#7a1f1f]">
+                  有课次不合格（缺交），无法通关。
+                </p>
+              ) : null}
               <p className="mt-2 text-sm text-ink-soft">
                 这轮还没通关。{tally}
-                {gap > 0 ? `，还差 ${gap} 个未弥补` : ''}。看看卡在哪里：
+                {score.uncovered > 0 ? `，还差 ${score.uncovered} 个未弥补` : ''}。看看卡在哪里：
               </p>
               <ul className="mt-3 space-y-1 text-sm">
                 {reasons.map((reason) => (
@@ -63,10 +64,23 @@ export function EndingScreen() {
           <div className="mt-5 grid grid-cols-4 gap-2">
             {LESSONS.map((lesson) => {
               const record = state.records.find((item) => item.lessonId === lesson.id)
+              const grade = record?.effectiveGrade ?? 'none'
+              const isFail = grade === 'none'
               return (
-                <div key={lesson.id} className="rounded-lg border border-[#d2ba90] bg-[#f7ecd4] p-2 text-center">
+                <div
+                  key={lesson.id}
+                  className={`rounded-lg border p-2 text-center ${
+                    isFail
+                      ? 'border-[#b23a2f]/50 bg-[#f8e4e0]'
+                      : 'border-[#d2ba90] bg-[#f7ecd4]'
+                  }`}
+                >
                   <div className="text-[11px] text-ink-soft">{lesson.title}</div>
-                  <div className="mt-2 font-display text-xl">{gradeLabel(record?.effectiveGrade ?? 'none')}</div>
+                  <div
+                    className={`mt-2 font-display text-xl ${isFail ? 'text-[#7a1f1f]' : ''}`}
+                  >
+                    {gradeLabel(grade)}
+                  </div>
                 </div>
               )
             })}
@@ -79,6 +93,13 @@ export function EndingScreen() {
               className="rounded-full bg-ink px-4 py-2 text-sm text-[#fff8ea]"
             >
               重新制定策略（再试一次）
+            </button>
+            <button
+              type="button"
+              onClick={() => setSimulatorOpen(true)}
+              className="rounded-full border border-[#7d9bb8] bg-[#eef4ff] px-4 py-2 text-sm text-[#2f4a6b]"
+            >
+              成绩模拟器
             </button>
             {!passed ? (
               <button

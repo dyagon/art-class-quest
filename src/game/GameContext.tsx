@@ -10,6 +10,8 @@ type GameContextValue = {
   config: GradeConfigMap
   debugOpen: boolean
   setDebugOpen: (open: boolean) => void
+  simulatorOpen: boolean
+  setSimulatorOpen: (open: boolean) => void
   start: () => void
   markParticipate: () => void
   selectChoice: (choiceId: string) => void
@@ -28,6 +30,7 @@ export function GameProvider({ children }: { children: ReactNode }) {
   const [app, dispatch] = useReducer(gameReducer, undefined, createInitialAppState)
   const [config, setConfig] = useState<GradeConfigMap>(getMergedGradeConfig)
   const [debugOpen, setDebugOpen] = useState(false)
+  const [simulatorOpen, setSimulatorOpen] = useState(false)
 
   useEffect(() => {
     if (!app.present.flashDiscipline) return
@@ -42,6 +45,8 @@ export function GameProvider({ children }: { children: ReactNode }) {
       config,
       debugOpen,
       setDebugOpen,
+      simulatorOpen,
+      setSimulatorOpen,
       start: () => dispatch({ type: 'START' }),
       markParticipate: () => dispatch({ type: 'MARK_PARTICIPATE' }),
       selectChoice: (choiceId) => dispatch({ type: 'SELECT_CHOICE', choiceId, config }),
@@ -59,7 +64,7 @@ export function GameProvider({ children }: { children: ReactNode }) {
         setConfig(getMergedGradeConfig())
       },
     }),
-    [app, config, debugOpen],
+    [app, config, debugOpen, simulatorOpen],
   )
 
   return <GameContext.Provider value={value}>{children}</GameContext.Provider>
